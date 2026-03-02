@@ -1,0 +1,82 @@
+[
+  {
+    "job_title":"AI Researcher",
+    "ai_intensity_score":0.2406666667,
+    "automation_risk_score":0.6106666667,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, MLOps, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, deep learning, machine learning,Business Analysis,Cloud Computing,Communication,Data Analysis,LLMs,NLP,Python,SQL,Software Engineering,machine learning,reinforcement learning",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Business Analyst",
+    "ai_intensity_score":0.234,
+    "automation_risk_score":0.6293333333,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, deep learning, machine learning,Business Analysis,Communication,Data Analysis,LLMs,Project Management,Research,SQL,Statistics,generative AI",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Data Scientist",
+    "ai_intensity_score":0.16,
+    "automation_risk_score":0.7173333333,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, deep learning,Business Analysis,Cloud Computing,Data Analysis,LLMs,Project Management,Python,Research,SQL,Software Engineering",
+    "industry_ai_adoption_stage":"Emerging",
+    "demand_score":0.7
+  },
+  {
+    "job_title":"ML Engineer",
+    "ai_intensity_score":0.354,
+    "automation_risk_score":0.574,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, MLOps, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision,Business Analysis,Cloud Computing,Communication,Data Analysis,LLMs,Project Management,SQL,Software Engineering,Statistics,deep learning,generative AI,reinforcement learning",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Operations Manager",
+    "ai_intensity_score":0.32,
+    "automation_risk_score":0.5006666667,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, MLOps, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, deep learning, reinforcement learning,Business Analysis,Communication,Data Analysis,LLMs,NLP,Project Management,Python,Research,SQL,Software Engineering,Statistics,deep learning,machine learning,reinforcement learning",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Policy Analyst",
+    "ai_intensity_score":0.3646666667,
+    "automation_risk_score":0.4793333333,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, LLMs, MLOps, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, deep learning, reinforcement learning,Business Analysis,Communication,Data Analysis,Project Management,Python,Research,SQL,Software Engineering,deep learning,generative AI,machine learning,reinforcement learning",
+    "industry_ai_adoption_stage":"Emerging",
+    "demand_score":0.7
+  },
+  {
+    "job_title":"Product Manager",
+    "ai_intensity_score":0.2146666667,
+    "automation_risk_score":0.654,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, LLMs, MLOps, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, generative AI,Business Analysis,Data Analysis,Python,SQL,Software Engineering,Statistics,deep learning,machine learning,reinforcement learning",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Research Scientist",
+    "ai_intensity_score":0.324,
+    "automation_risk_score":0.5833333333,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, machine learning, reinforcement learning,Business Analysis,Cloud Computing,LLMs,MLOps,Project Management,Python,Research,SQL,Statistics,machine learning,reinforcement learning",
+    "industry_ai_adoption_stage":"Growing",
+    "demand_score":1.0
+  },
+  {
+    "job_title":"Software Engineer",
+    "ai_intensity_score":0.2853333333,
+    "automation_risk_score":0.5966666667,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, MLOps, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, reinforcement learning,Business Analysis,Cloud Computing,Communication,LLMs,Project Management,Python,Research,SQL,Statistics,computer vision,generative AI,machine learning",
+    "industry_ai_adoption_stage":"Emerging",
+    "demand_score":0.7
+  },
+  {
+    "job_title":"Systems Engineer",
+    "ai_intensity_score":0.1713333333,
+    "automation_risk_score":0.634,
+    "combined_skills":", Business Analysis, Cloud Computing, Communication, Data Analysis, NLP, Project Management, Python, Research, SQL, Software Engineering, Statistics, computer vision, machine learning,Business Analysis,Cloud Computing,Communication,Data Analysis,MLOps,NLP,Research,SQL,Software Engineering,reinforcement learning",
+    "industry_ai_adoption_stage":"Emerging",
+    "demand_score":0.7
+  }
+]
