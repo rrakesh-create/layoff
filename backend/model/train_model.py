@@ -1,132 +1,62 @@
-# =====================================================
-# TRAIN MODEL SCRIPT
-# =====================================================
-
 import pandas as pd
-import os
-import joblib
-import scipy.sparse as sp
-
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, r2_score
+import joblib
 
+# 1. Load the updated dataset
+df = pd.read_csv(r'D:\layoff-risk-ai\dataset\Final_Updated_Dataset.csv')
 
-# =====================================================
-# STEP 1: PATH SETUP (VERY IMPORTANT)
-# =====================================================
+# 2. Categorical data ni handle cheddam (Label Encoding)
+# Role mariyu Experience Level ni numbers ga marchali
+le_role = LabelEncoder()
+le_exp = LabelEncoder()
 
-# Current file location
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+df['role_encoded'] = le_role.fit_transform(df['role'])
+df['exp_level_encoded'] = le_exp.fit_transform(df['experience_level'])
 
-# Project root folder
-PROJECT_ROOT = os.path.abspath(
-    os.path.join(BASE_DIR, "../../")
-)
+# 3. Features Selection (Input columns)
+X = df[['role_encoded', 'exp_level_encoded', 'years_experience', 
+        'ai_impact_score', 'automation_risk', 'market_demand', 'skill_adaptability']]
 
-# Dataset path
-DATASET_PATH = os.path.join(
-    PROJECT_ROOT,
-    "dataset",
-    "IT_Career_Risk_Dataset.csv"
-)
+# Target Variable (Output we want to predict)
+y = df['layoff_risk']
 
-print("Dataset Path:", DATASET_PATH)
+# 4. Data Splitting (80% Training, 20% Testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-
-# =====================================================
-# STEP 2: LOAD DATASET
-# =====================================================
-
-df = pd.read_csv(DATASET_PATH)
-
-print("Dataset Loaded ✅")
-print("Rows:", df.shape[0])
-
-
-# =====================================================
-# STEP 3: TEXT FEATURE (SKILLS)
-# =====================================================
-
-skills_text = df["primary_skills"].astype(str)
-
-vectorizer = TfidfVectorizer()
-
-X_skills = vectorizer.fit_transform(skills_text)
-
-
-# =====================================================
-# STEP 4: NUMERIC FEATURES
-# =====================================================
-
-numeric_features = df[
-[
-    "experience_score",
-    "ai_impact_score",
-    "automation_risk",
-    "market_demand",
-    "skill_adaptability"
-]
-]
-
-
-# Combine features
-X = sp.hstack([X_skills, numeric_features])
-
-
-# Target
-y = df["layoff_risk"]
-
-
-# =====================================================
-# STEP 5: TRAIN TEST SPLIT
-# =====================================================
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42
-)
-
-
-# =====================================================
-# STEP 6: MODEL TRAINING
-# =====================================================
-
-model = RandomForestRegressor(
-    n_estimators=200,
-    random_state=42,
-    n_jobs=-1
-)
-
+# 5. Model Training (Random Forest Regressor)
+# Idi IT trends lanti non-linear data ki chala baga work avtundi
+model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-print("✅ Model Training Completed")
+# 6. Model Evaluation
+y_pred = model.predict(X_test)
+print(f"Model Accuracy (R2 Score): {r2_score(y_test, y_pred)*100:.2f}%")
+print(f"Average Error: {mean_absolute_error(y_test, y_pred):.2f}%")
 
+# 7. Model ni Save cheddam (App lo use cheyadaniki)
+joblib.dump(model, 'layoff_model.pkl')
+joblib.dump(le_role, 'role_encoder.pkl')
+joblib.dump(le_exp, 'exp_encoder.pkl')
 
-# =====================================================
-# STEP 7: SAVE MODEL SAFELY
-# =====================================================
+print("Model and Encoders saved successfully!")
 
-model_path = os.path.join(BASE_DIR, "risk_model.pkl")
-vectorizer_path = os.path.join(BASE_DIR, "vectorizer.pkl")
+# Model Test cheyadaniki (Example)
+def predict_my_risk(role, exp_level, years, ai_score, auto_score, market_score, adapt_score):
+    # Input ni encode cheyali
+    role_encoded = le_role.transform([role])[0]
+    exp_encoded = le_exp.transform([exp_level])[0]
+    
+    # Prediction
+    features = [[role_encoded, exp_encoded, years, ai_score, auto_score, market_score, adapt_score]]
+    risk = model.predict(features)
+    
+    print(f"\n--- Prediction Result ---")
+    print(f"Role: {role} ({exp_level})")
+    print(f"Predicted Layoff Risk: {risk[0]:.2f}%")
 
-joblib.dump(model, model_path)
-joblib.dump(vectorizer, vectorizer_path)
-
-print("\n✅ Model saved at:", model_path)
-print("✅ Vectorizer saved at:", vectorizer_path)
-
-
-# =====================================================
-# STEP 8: QUICK VALIDATION
-# =====================================================
-
-print("\nModel File Size:",
-      os.path.getsize(model_path), "bytes")
-
-print("Vectorizer File Size:",
-      os.path.getsize(vectorizer_path), "bytes")
-
-print("\n🎉 TRAINING SUCCESSFUL")
+# Test it!
+predict_my_risk('ML Engineer', 'senior', 8, 0.2, 0.2, 0.9, 0.9)
+predict_my_risk('Frontend Developer', 'junior', 1, 0.8, 0.7, 0.5, 0.4)
