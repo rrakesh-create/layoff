@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import re
+import fitz  # PyMuPDF
 from model.predict import predict_risk 
+from typing import List, Optional
 
 app = FastAPI()
 
@@ -18,14 +20,69 @@ class RiskInput(BaseModel):
     skills: str
     years_experience: float
 
+class ChatRequest(BaseModel):
+    message: str
+    risk_level: str
+    role: str
+    skills: str
+
+@app.post("/upload-resume")
+async def upload_resume(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        doc = fitz.open(stream=contents, filetype="pdf")
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        
+        # Basic Extraction Logic
+        # 1. Detect Role
+        detected_role = "Full Stack Developer" # Default
+        roles = ["Frontend Developer", "Backend Developer", "Full Stack Developer", "ML Engineer", 
+                 "Cloud Engineer", "DevOps Engineer", "Data Analyst", "Cybersecurity Analyst", "Blockchain Developer"]
+        
+        for r in roles:
+            if re.search(r.replace(" ", r"\s*"), text, re.IGNORECASE):
+                detected_role = r
+                break
+        
+        # 2. Detect Experience
+        exp_match = re.search(r"(\d+)\+?\s*(years|yrs|experience)", text, re.IGNORECASE)
+        detected_exp = float(exp_match.group(1)) if exp_match else 2.0
+        
+        # 3. Detect Skills (Simple keyword matching)
+        potential_skills = ["React", "Node.js", "Python", "AWS", "Docker", "Kubernetes", "Java", "SQL", "MongoDB", "TypeScript"]
+        found_skills = [s for s in potential_skills if re.search(s, text, re.IGNORECASE)]
+        
+        return {
+            "status": "success",
+            "extracted_data": {
+                "role": detected_role,
+                "years_experience": detected_exp,
+                "skills": ", ".join(found_skills)
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Resume parsing error: {str(e)}")
+
+@app.post("/chat")
+async def chat_advice(data: ChatRequest):
+    # Simple rule-based logic for the "AI Counselor"
+    advice = ""
+    if data.risk_level == "High":
+        advice = f"Don't worry! Your role as {data.role} is evolving. I recommend focusing on emerging tech like GenAI or Cloud Architecture. Consider getting a 'Certified Solutions Architect' or 'AWS Machine Learning' certification to future-proof your career."
+    elif data.risk_level == "Moderate":
+        advice = f"You are in a good spot, but staying updated is key. Since you already know {data.skills.split(',')[0]}, adding a certification in Deep Learning or Advanced DevOps would really make your profile stand out."
+    else:
+        advice = "Your risk is low! Keep doing what you're doing. To stay at the top, maybe explore some leadership or system design courses."
+    
+    return {"reply": advice}
 
 @app.post("/predict")
 def predict(data: RiskInput):
     try:
         # 1. ADVANCED NORMALIZATION (Fix for "M L Engineer", "MLEngineer", etc.)
-        # Input lo unna extra spaces ni remove chesi, Standard Format ki marchadam
         raw_role = data.role.strip()
-        # "M L Engineer" -> "MLEngineer"
         no_space_role = raw_role.replace(" ", "").lower()
         
         # 2. MARKET-DRIVEN ROLE BOUNDARIES
