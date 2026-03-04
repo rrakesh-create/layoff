@@ -1,7 +1,6 @@
 import joblib
 import numpy as np
 import os
-from sklearn.preprocessing import LabelEncoder
 
 # Model files ekkada unnayo path set chestunnam
 # 'backend/model_training.py' run chesinappudu ee files generate ayyi untayi
