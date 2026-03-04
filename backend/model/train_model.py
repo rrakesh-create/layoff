@@ -6,7 +6,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import joblib
 
 # 1. Load the updated dataset
-df = pd.read_csv(r'D:\layoff-risk-ai\dataset\Final_Updated_Dataset.csv')
+df = pd.read_csv(r'/Users/hemalathaguthurthi/Downloads/Final_Updated_Dataset.csv')
 
 # 2. Categorical data ni handle cheddam (Label Encoding)
 # Role mariyu Experience Level ni numbers ga marchali

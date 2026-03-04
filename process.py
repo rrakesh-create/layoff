@@ -1,7 +1,7 @@
 import pandas as pd
 
 # 1. Dataset load cheyandi
-df = pd.read_csv('D:\layoff-risk-ai\dataset\IT_Career_Risk_Dataset.csv')
+df = pd.read_csv('/Users/hemalathaguthurthi/Downloads/Final_Updated_Dataset.csv')
 
 # 2. Base Risk for Roles
 role_risk_map = {
