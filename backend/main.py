@@ -6,6 +6,15 @@ import fitz  # PyMuPDF
 from model.predict import predict_risk 
 from typing import List, Optional
 
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+genai_api_key = os.getenv("GEMINI_API_KEY")
+if genai_api_key:
+    genai.configure(api_key=genai_api_key)
+
 app = FastAPI()
 
 app.add_middleware(
@@ -19,12 +28,19 @@ class RiskInput(BaseModel):
     role: str
     skills: str
     years_experience: float
+    proficiency: Optional[dict] = None
 
 class ChatRequest(BaseModel):
     message: str
     risk_level: str
     role: str
     skills: str
+
+class RoadmapRequest(BaseModel):
+    role: str
+    skills: str
+    years_experience: float
+    risk_level: str
 
 @app.post("/upload-resume")
 async def upload_resume(file: UploadFile = File(...)):
@@ -35,11 +51,13 @@ async def upload_resume(file: UploadFile = File(...)):
         for page in doc:
             text += page.get_text()
         
-        # Basic Extraction Logic
         # 1. Detect Role
-        detected_role = "Full Stack Developer" # Default
-        roles = ["Frontend Developer", "Backend Developer", "Full Stack Developer", "ML Engineer", 
-                 "Cloud Engineer", "DevOps Engineer", "Data Analyst", "Cybersecurity Analyst", "Blockchain Developer"]
+        detected_role = "Software Engineer"
+        roles = [
+            "Frontend Developer", "Backend Developer", "Full Stack Developer", 
+            "ML Engineer", "Cloud Engineer", "DevOps Engineer", 
+            "Data Analyst", "Cybersecurity Analyst"
+        ]
         
         for r in roles:
             if re.search(r.replace(" ", r"\s*"), text, re.IGNORECASE):
@@ -50,297 +68,206 @@ async def upload_resume(file: UploadFile = File(...)):
         exp_match = re.search(r"(\d+)\+?\s*(years|yrs|experience)", text, re.IGNORECASE)
         detected_exp = float(exp_match.group(1)) if exp_match else 2.0
         
-        # 3. Detect Skills (Simple keyword matching)
-        potential_skills = ["React", "Node.js", "Python", "AWS", "Docker", "Kubernetes", "Java", "SQL", "MongoDB", "TypeScript"]
-        found_skills = [s for s in potential_skills if re.search(s, text, re.IGNORECASE)]
+        # 3. Detect Skills
+        potential_skills = [
+            "React", "Node.js", "Python", "AWS", "Docker", "Kubernetes", 
+            "Java", "SQL", "MongoDB", "TypeScript", "JavaScript", 
+            "Generative AI", "Machine Learning", "Cybersecurity"
+        ]
+        found_skills = [s for s in potential_skills if re.search(r"\b" + re.escape(s) + r"\b", text, re.IGNORECASE)]
+        
+        # 4. Default Proficiencies for extracted skills
+        proficiency = {s: "Intermediate" for s in found_skills}
         
         return {
             "status": "success",
             "extracted_data": {
                 "role": detected_role,
                 "years_experience": detected_exp,
-                "skills": ", ".join(found_skills)
+                "skills": ", ".join(found_skills),
+                "proficiency": proficiency
             }
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Resume parsing error: {str(e)}")
 
-@app.post("/chat")
-async def chat_advice(data: ChatRequest):
-    # Simple rule-based logic for the "AI Counselor"
-    advice = ""
-    if data.risk_level == "High":
-        advice = f"Don't worry! Your role as {data.role} is evolving. I recommend focusing on emerging tech like GenAI or Cloud Architecture. Consider getting a 'Certified Solutions Architect' or 'AWS Machine Learning' certification to future-proof your career."
-    elif data.risk_level == "Moderate":
-        advice = f"You are in a good spot, but staying updated is key. Since you already know {data.skills.split(',')[0]}, adding a certification in Deep Learning or Advanced DevOps would really make your profile stand out."
-    else:
-        advice = "Your risk is low! Keep doing what you're doing. To stay at the top, maybe explore some leadership or system design courses."
-    
-    return {"reply": advice}
-
 @app.post("/predict")
 def predict(data: RiskInput):
     try:
-        # 1. ADVANCED NORMALIZATION (Fix for "M L Engineer", "MLEngineer", etc.)
+        # 1. NORMALIZATION
         raw_role = data.role.strip()
         no_space_role = raw_role.replace(" ", "").lower()
         
-        # 2. MARKET-DRIVEN ROLE BOUNDARIES
+        # 2. MARKET-DRIVEN ROLE BOUNDARIES (Automation Risks)
         role_rules = {
             'Cybersecurity Analyst': {
-                'min': 5, 'max': 30, 'ai': 0.15, 'demand': 0.98, 
-                'market_reason': 'Cybersecurity is a high-demand human-centric role. Human intuition is mandatory for security.'
+                'min': 5, 'max': 25, 'ai': 0.10, 'demand': 0.98, 
+                'market_reason': 'High demand for human intuition in security; low automation risk.'
             },
             'ML Engineer': {
-                'min': 8, 'max': 35, 'ai': 0.20, 'demand': 0.95,
-                'market_reason': 'Core role driving the AI revolution; high demand for building and maintaining AI models.'
+                'min': 5, 'max': 30, 'ai': 0.15, 'demand': 0.95,
+                'market_reason': 'Core AI role; highly resistant to automation as they build the automation.'
             },
             'Cloud Engineer': {
-                'min': 15, 'max': 45, 'ai': 0.35, 'demand': 0.88,
-                'market_reason': 'Cloud infrastructure is essential; however, automated provisioning (IaC) slightly impacts manual tasks.'
+                'min': 10, 'max': 35, 'ai': 0.25, 'demand': 0.90,
+                'market_reason': 'Essential infrastructure, though basic tasks are being automated.'
             },
             'DevOps Engineer': {
-                'min': 12, 'max': 40, 'ai': 0.35, 'demand': 0.88,
-                'market_reason': 'Critical for CICD, but AI is starting to automate standard deployment scripts.'
+                'min': 10, 'max': 40, 'ai': 0.30, 'demand': 0.88,
+                'market_reason': 'Critical for delivery pipeline; high complexity reduces automation risk.'
             },
             'Full Stack Developer': {
-                'min': 40, 'max': 80, 'ai': 0.60, 'demand': 0.75,
-                'market_reason': 'Versatility helps, but generic development is increasingly being handled by AI co-pilots.'
-            },
-            'App Developer': {
-                'min': 35, 'max': 75, 'ai': 0.60, 'demand': 0.70,
-                'market_reason': 'Mobile dev is stable, but low-code platforms are reducing the need for basic app builders.'
-            },
-            'Data Analyst': {
-                'min': 50, 'max': 85, 'ai': 0.80, 'demand': 0.65,
-                'market_reason': 'High risk as GenAI can now perform complex data cleaning and visualization.'
+                'min': 25, 'max': 60, 'ai': 0.50, 'demand': 0.80,
+                'market_reason': 'Versatility helps, but routine coding is increasingly automated.'
             },
             'Backend Developer': {
-                'min': 60, 'max': 95, 'ai': 0.85, 'demand': 0.60,
-                'market_reason': 'High risk due to AI ability to generate server-side logic and database schemas instantly.'
+                'min': 35, 'max': 70, 'ai': 0.60, 'demand': 0.70,
+                'market_reason': 'Logic generation via AI is high, but architectural depth is still human-led.'
             },
-            'Blockchain Developer': {
-                'min': 65, 'max': 98, 'ai': 0.70, 'demand': 0.40,
-                'market_reason': 'Market volatility and high specialization make this role highly unstable during downturns.'
+            'Data Analyst': {
+                'min': 45, 'max': 80, 'ai': 0.75, 'demand': 0.65,
+                'market_reason': 'High risk as GenAI excels at data cleaning and visualization.'
             },
             'Frontend Developer': {
-                'min': 70, 'max': 98, 'ai': 0.95, 'demand': 0.50,
-                'market_reason': 'Very high risk; AI can now convert UI designs directly into high-quality code.'
+                'min': 50, 'max': 85, 'ai': 0.85, 'demand': 0.60,
+                'market_reason': 'Very high risk; AI can generate UI from design or descriptions.'
             }
         }
 
-        # ROLE MATCHING LOGIC
-        normalized_role = raw_role # Default
+        # Match Role
+        normalized_role = raw_role
         rule = None
-
-        # Check for direct match or fuzzy match (ignoring spaces/case)
-        for key in role_rules.keys():
+        for key, r in role_rules.items():
             if key.replace(" ", "").lower() == no_space_role:
-                rule = role_rules[key]
+                rule = r
                 normalized_role = key
                 break
         
-        # If no match found, use a safe default instead of crashing
         if not rule:
-            rule = {
-                'min': 30, 'max': 70, 'ai': 0.5, 'demand': 0.6, 
-                'market_reason': 'Standard industry competition based on general market trends.'
-            }
-            normalized_role = raw_role
+            rule = {'min': 30, 'max': 70, 'ai': 0.5, 'demand': 0.6, 'market_reason': 'General market competition.'}
 
-        # 3. Dynamic Explanation Builder
-        reasons = []
-        reasons.append(f"Role Impact: {rule['market_reason']}")
-
-        # 4. Adjustment Logic - DYNAMIC SKILL EVALUATION (DIVERSITY + IMPACT)
-        user_skills_raw = [s.strip().lower() for s in data.skills.split(',') if s.strip()]
-        user_skills = set()
+        # 3. SKILL PROCESSING
+        user_skills_raw = [s.strip() for s in data.skills.split(',') if s.strip()]
+        proficiency = data.proficiency or {}
         
-        # Simple plural/synonym normalization mapping for core skills
-        normalization_map = {
-            "node.js": "nodejs", "node": "nodejs", "reactjs": "react", 
-            "amazon web services": "aws", "gcp": "google cloud", "ml": "machine learning",
-            "ai": "artificial intelligence", "genai": "generative ai", 
-            "javascript": "js", "typescript": "ts", "k8s": "kubernetes",
-            "golang": "go", "postgres": "postgresql"
-        }
-
-        for s in user_skills_raw:
-            normalized = normalization_map.get(s, s)
-            user_skills.add(normalized)
-
-        volume = len(user_skills)
-
-        # A. DOMAIN KNOWLEDGE MAP
+        # Proficiency weights
+        prof_weights = {"Beginner": 1.2, "Intermediate": 1.0, "Advanced": 0.8, "Expert": 0.6}
+        
+        strength_score = 0
+        total_p_weight = 0
+        for skill in user_skills_raw:
+            level = proficiency.get(skill, "Intermediate")
+            weight = prof_weights.get(level, 1.0)
+            total_p_weight += weight
+        
+        avg_proficiency_weight = total_p_weight / len(user_skills_raw) if user_skills_raw else 1.2
+        
+        # 4. DOMAIN MAPPING (Relevance & Diversity)
         domain_mapping = {
-            "frontend": {"react", "vue", "angular", "svelte", "html", "css", "js", "ts", "tailwind", "bootstrap", "nextjs", "nuxt", "ui", "ux"},
-            "backend": {"nodejs", "python", "java", "c#", "go", "rust", "php", "ruby", "django", "spring", "express", "fastapi"},
-            "database": {"sql", "mysql", "postgresql", "mongodb", "redis", "cassandra", "dynamodb", "neo4j", "oracle"},
-            "cloud_platform": {"aws", "azure", "google cloud", "heroku", "vercel", "cloudflare"},
-            "devops_infra": {"docker", "kubernetes", "jenkins", "gitlab ci", "terraform", "ansible", "linux", "bash", "linux/unix", "ci/cd"},
-            "data_ai": {"machine learning", "artificial intelligence", "data science", "pandas", "numpy", "tensorflow", "pytorch", "generative ai", "nlp", "llm", "data engineering", "spark"},
-            "security": {"cybersecurity", "penetration testing", "ethical hacking", "owasp", "cryptography", "iam", "network security"}
+            "Frontend": ["react", "vue", "angular", "javascript", "typescript", "html", "css", "tailwind", "nextjs"],
+            "Backend": ["nodejs", "python", "java", "go", "rust", "django", "fastapi", "spring"],
+            "Database": ["sql", "postgresql", "mongodb", "redis", "mysql", "cassandra"],
+            "Cloud": ["aws", "azure", "google cloud", "cloud", "terraform"],
+            "DevOps": ["docker", "kubernetes", "jenkins", "ci/cd", "ansible"],
+            "AI/ML": ["machine learning", "ai", "generative ai", "tensorflow", "pytorch", "nlp", "llm"],
+            "Cybersecurity": ["cybersecurity", "security", "penetration testing", "ethical hacking"]
         }
 
-        # B. TRENDING & HIGH IMPACT TECHNOLOGIES (Outcome Creating)
-        trending_tech = {"cloud", "aws", "azure", "google cloud", "kubernetes", "docker", "generative ai", "machine learning", "artificial intelligence", "devops", "go", "rust", "react", "nextjs", "terraform"}
-        high_impact_tech = {"machine learning", "artificial intelligence", "generative ai", "data engineering", "cybersecurity", "cloud architecture", "kubernetes", "devsecops"}
-        legacy_tech = {"jquery", "manual testing", "php 5", "html only", "css only", "vbscript", "cobol", "svn", "waterfall", "flash", "actionscript", "coldfusion"}
-
-        # Tracking variables
-        domains_covered = set()
-        trending_count = 0
-        impact_count = 0
-        legacy_count = 0
-
-        # Evaluate constraints
-        for skill in user_skills:
-            # 1. Check Domains
-            for domain_name, domain_skills in domain_mapping.items():
-                if any(ds in skill.split(' ') or ds == skill for ds in domain_skills):
-                    domains_covered.add(domain_name)
-            
-            # 2. Check Trending
-            if any(t in skill for t in trending_tech):
-                trending_count += 1
-                
-            # 3. Check High Impact
-            if any(i in skill for i in high_impact_tech):
-                impact_count += 1
-                
-            # 4. Check Legacy
-            if any(l in skill for l in legacy_tech):
-                legacy_count += 1
-
-        domain_count = len(domains_covered)
-        adjustment = 0
-
-        # Calculate logical weights (Max deduction combinations approx -35%)
-        # Cross-Domain Diversity Bonus
-        if domain_count >= 4:
-            domain_bonus = -15
-            reasons.append(f"Strong Cross-Domain Expertise: You span {domain_count} distinct tech domains (e.g. Frontend, DB, Cloud), significantly boosting your career stability (-15% risk).")
-        elif domain_count >= 2:
-            domain_bonus = -8
-            reasons.append(f"Skill Diversity: You cover {domain_count} tech domains, showing good flexibility (-8% risk).")
-        else:
-            domain_bonus = 0
-            if volume > 4:
-                # Weak Diversity Penalty: High skill count but only 1 domain.
-                domain_bonus = +5
-                reasons.append(f"Weak Diversity: You listed {volume} skills, but they are concentrated in only 1 tech domain. Diverse teams prefer cross-functional engineers (+5% risk).")
-
-        adjustment += domain_bonus
-
-        # Trending Market Presence Bonus
-        if trending_count >= 3:
-            impact_mod = -10
-            reasons.append(f"Trending Technologies: You use {trending_count} highly sought-after tools (like Cloud/AI/DevOps), making you extremely marketable (-10% risk).")
-            adjustment += impact_mod
-        elif trending_count > 0:
-            impact_mod = -5
-            reasons.append(f"Trending Knowledge: You possess {trending_count} trending tech skills (-5% risk).")
-            adjustment += impact_mod
-            
-        # Outcome Impact / Hardcore Engineering Power Bonus
-        if impact_count >= 2:
-            outcome_mod = -10
-            reasons.append(f"High Business Impact: Skills like AI, Data Eng, or Security directly protect or generate enterprise revenue. Excellent future-proofing (-10% risk).")
-            adjustment += outcome_mod
-        elif impact_count == 1:
-            outcome_mod = -5
-            reasons.append(f"Valuable Specialty: You possess a high-impact outcome skill (+1 Security/AI/Data), providing strong job security (-5% risk).")
-            adjustment += outcome_mod
-
-        # Legacy Penalty
-        legacy_impact = min(legacy_count * 5.0, 20.0)
-        adjustment += legacy_impact
-
-        if legacy_count > 0:
-            reasons.append(f"Legacy Tech Warning: Relying on {legacy_count} outdated technologies increases your risk of technological redundancy (+{legacy_impact}% risk).")
-            
-        if volume == 0:
-            reasons.append("Skill Warning: No skills provided. Career stability requires an active toolkit.")
-
-        # Experience Calculation (Safety check for NoneType)
-        exp = data.years_experience if data.years_experience is not None else 0
-        if exp > 8:
-            adjustment -= 10
-            reasons.append("Experience Factor: Seniority provides architectural depth that AI cannot easily replicate.")
-        elif exp <= 2:
-            adjustment += 15
-            reasons.append("Experience Factor: Entry-level roles are currently more vulnerable to market shifts.")
-
-        # 5. Final Score Calculation (With Error Handling)
-        try:
-            base_ai_risk = predict_risk(
-                role=normalized_role, 
-                experience_level="mid", 
-                years_experience=exp, 
-                ai_impact_score=rule['ai'], 
-                automation_risk=rule['ai'], 
-                market_demand=rule['demand'], 
-                skill_adaptability=0.8
-            )
-            # If predict_risk returns None, handle it
-            if base_ai_risk is None:
-                base_ai_risk = (rule['min'] + rule['max']) / 2
-        except Exception:
-            # Fallback score if ML model fails
-            base_ai_risk = (rule['min'] + rule['max']) / 2
+        domains_detected = set()
+        relevant_skills_count = 0
+        outcome_impact_skills = ["ai", "machine learning", "generative ai", "aws", "azure", "google cloud", "cybersecurity", "kubernetes"]
+        impact_detected = []
         
-        final_risk = max(rule['min'], min(base_ai_risk + adjustment, rule['max']))
-        risk_level = "Low" if final_risk <= 35 else "Moderate" if final_risk <= 65 else "High"
-
-        # 6. Simulated Risk for Target Roles (Comparative Risk Filtering)
-        stable_target_role_keys = ['ML Engineer', 'Cybersecurity Analyst', 'DevOps Engineer', 'Data Analyst', 'Backend Developer']
-        target_role_risks = {}
-
-        for key in stable_target_role_keys:
-            # Skip calculating if the user is already this role
-            if key.replace(" ", "").lower() == normalized_role.replace(" ", "").lower() or role_rules[key] == rule:
-                continue
-
-            sim_rule = role_rules[key]
-            try:
-                # Calculate base risk for this theoretical role, keeping user's real experience constant
-                sim_base = predict_risk(
-                    role=key,
-                    experience_level="mid",
-                    years_experience=exp,
-                    ai_impact_score=sim_rule['ai'],
-                    automation_risk=sim_rule['ai'],
-                    market_demand=sim_rule['demand'],
-                    skill_adaptability=0.8
-                )
-                if sim_base is None:
-                    sim_base = (sim_rule['min'] + sim_rule['max']) / 2
-            except Exception:
-                sim_base = (sim_rule['min'] + sim_rule['max']) / 2
+        for skill in user_skills_raw:
+            s_lower = skill.lower()
+            found_in_domain = False
+            for domain, skills in domain_mapping.items():
+                if any(ds in s_lower for ds in skills):
+                    domains_detected.add(domain)
+                    found_in_domain = True
             
-            # Apply exactly the same skill deduction logic they earned in step 4
-            sim_final = max(sim_rule['min'], min(sim_base + adjustment, sim_rule['max']))
+            # Check for role relevance
+            role_domain = None
+            for d, sks in domain_mapping.items():
+                if d.lower() in normalized_role.lower():
+                    role_domain = d
+                    break
             
-            # Normalize key back to frontend expected ID (e.g. Cybersecurity Analyst -> CybersecurityEngineer)
-            front_id = key.replace(" ", "")
-            if front_id == 'CybersecurityAnalyst': front_id = 'CybersecurityEngineer'
-            if front_id == 'DataAnalyst': front_id = 'Database'
+            if role_domain and any(ds in s_lower for ds in domain_mapping[role_domain]):
+                relevant_skills_count += 1
+            
+            if any(is_sk in s_lower for is_sk in outcome_impact_skills):
+                impact_detected.append(skill)
 
-            target_role_risks[front_id] = round(sim_final, 2)
+        # 5. ANALYSIS LOGIC
+        strengths = []
+        risk_factors = []
+        
+        # Removed Experience Analysis based on user request (layoff must be done based on skill not experience)
+        adj = 0
+
+        # Skill Strength
+        if avg_proficiency_weight < 0.8:
+            adj -= 15
+            strengths.append("Deep Expertise: High average proficiency in listed skills.")
+        elif avg_proficiency_weight > 1.1:
+            adj += 15
+            risk_factors.append("Low Skill Maturity: Most skills are at a beginner level.")
+
+        # Skill Relevance
+        relevance_ratio = relevant_skills_count / len(user_skills_raw) if user_skills_raw else 0
+        if relevance_ratio < 0.3:
+            adj += 12
+            risk_factors.append("Role Mismatch: Many listed skills are not directly relevant to the current role.")
+
+        # Skill Diversity (Trending, Cross-Domain, Impact)
+        diversity_score = 0
+        if len(domains_detected) >= 3:
+            diversity_score += 15
+            adj -= 15
+            strengths.append(f"Full-Stack Versatility: Expertise across {len(domains_detected)} domains.")
+        
+        if any(is_sk in [s.lower() for s in user_skills_raw] for is_sk in ["generative ai", "ai", "llm"]):
+            diversity_score += 10
+            adj -= 12
+            strengths.append("AI-Ready: Direct knowledge of Generative AI/LLMs.")
+
+        if impact_detected:
+            adj -= 10
+            strengths.append(f"Impactful Skills: Knowledge of {', '.join(impact_detected[:2])} drives business value.")
+
+        # 6. FINAL SCORE
+        base_risk = (rule['min'] + rule['max']) / 2
+        final_score = max(rule['min'], min(base_risk + adj, rule['max']))
+        risk_level = "Low Risk" if final_score <= 35 else "Medium Risk" if final_score <= 65 else "High Risk"
+
+        # 7. ALTERNATE ROLES
+        suggested_roles = []
+        if "Frontend" in domains_detected and "Backend" in domains_detected:
+            suggested_roles.append("Full Stack Developer")
+        if "AI/ML" in domains_detected:
+            suggested_roles.append("Machine Learning Engineer")
+        if "Cloud" in domains_detected or "DevOps" in domains_detected:
+            suggested_roles.append("Cloud Architect" if data.years_experience > 5 else "Cloud Engineer")
+        if "Database" in domains_detected and "Backend" in domains_detected:
+            suggested_roles.append("Data Engineer")
+        
+        if not suggested_roles:
+            suggested_roles = ["Software Engineer", "Systems Architect"]
 
         return {
-            "status": "success",
-            "role": normalized_role,
-            "layoff_risk": round(final_risk, 2),
+            "layoff_risk": round(final_score, 2),
+            "career_risk_score": round(final_score, 2),
             "risk_level": risk_level,
-            "explanations": reasons,
-            "meter_config": {
-                "min": rule['min'],
-                "max": rule['max'],
-                "color": "green" if risk_level == "Low" else "orange" if risk_level == "Moderate" else "red"
-            },
-            "target_role_risks": target_role_risks
+            "career_strengths": strengths,
+            "key_risk_factors": risk_factors,
+            "skill_diversity_summary": f"Detected expertise in {', '.join(domains_detected)}. Diversity index is {'High' if diversity_score > 20 else 'Moderate'}.",
+            "recommended_skills": ["Generative AI", "Cloud Architecture", "Cybersecurity"] if "AI/ML" not in domains_detected else ["Kubernetes", "DevSecOps"],
+            "suggested_alternate_roles": list(set(suggested_roles))
         }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     except Exception as e:
         # Provide a clear error message in English to the Frontend
@@ -349,3 +276,54 @@ def predict(data: RiskInput):
             status_code=500, 
             detail=f"Prediction Error: {str(e)}. Please check your input and try again."
         )
+
+@app.post("/roadmap")
+async def generate_roadmap(data: RoadmapRequest):
+    if not genai_api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key missing")
+        
+    prompt = f"""
+    You are an expert Career Agent helping tech professionals pivot safely.
+    Role: {data.role}
+    Experience: {data.years_experience} years
+    Skills: {data.skills}
+    Current Layoff Risk Level: {data.risk_level}
+    
+    Provide a highly personalized, practical, and dynamic career shift roadmap mapped to their specific skills and experience level to reduce layoff risk. 
+    Format your response in Markdown with the following structured sections:
+    
+    ### 🎯 Target Roles
+    Suggest 2-3 specific job roles that are highly stable and match their current skills closely. Explain why each fits.
+    
+    ### 🚀 Skills to Acquire
+    Identify 3-5 specific gaps between their current skills and the target roles. Tell them exactly what to learn.
+    
+    ### 📚 Recommended Resources
+    Provide 3 actionable resources to learn these skills (certifications, popular courses, specific documentation).
+    
+    ### 📈 3-Month Action Plan
+    A short week-by-week or month-by-month actionable plan to start transitioning.
+    """
+    
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash-8b') # use flash for speed
+        response = model.generate_content(prompt)
+        return {"roadmap": response.text}
+    except Exception as e:
+        print(f"Agent Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to run the AI Agent")
+
+@app.post("/chat")
+async def chat_agent(data: ChatRequest):
+    if not genai_api_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key missing")
+        
+    system_prompt = f"You are a helpful, encouraging career advisor. The user is a {data.role} with skills: {data.skills}. Their current layoff risk is {data.risk_level}. They need very conversational and short advice (max 2-3 sentences). Answer this question: {data.message}"
+    
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash-8b')
+        response = model.generate_content(system_prompt)
+        return {"reply": response.text}
+    except Exception as e:
+        print(f"Chat Error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to respond")
