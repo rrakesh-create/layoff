@@ -6,15 +6,12 @@ import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer
 } from 'recharts';
 import { roleSkills, careerShifts, learningResources } from "./data";
-import ReactMarkdown from 'react-markdown';
 
 export default function VantageAI() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [activeTab, setActiveTab] = useState("risk");
     const [uploading, setUploading] = useState(false);
-    const [roadmapText, setRoadmapText] = useState("");
-    const [roadmapLoading, setRoadmapLoading] = useState(false);
 
     // Chatbot States
     const [chatOpen, setChatOpen] = useState(false);
@@ -27,8 +24,7 @@ export default function VantageAI() {
     const [form, setForm] = useState({
         role: "",
         skills: "",
-        years_experience: "",
-        proficiency: {}
+        years_experience: ""
     });
 
     // --- Input UI States ---
@@ -87,11 +83,7 @@ export default function VantageAI() {
         parts[parts.length - 1] = ` ${skill} `;
         const finalStr = parts.join(", ").trim().replace(/^,/, "");
         setSkillInput(finalStr + ", ");
-        setForm(prev => ({
-            ...prev,
-            skills: finalStr,
-            proficiency: { ...prev.proficiency, [skill]: "Intermediate" }
-        }));
+        setForm(prev => ({ ...prev, skills: finalStr }));
         setSkillSuggestions([]);
         setActiveSkillIdx(-1);
         setTimeout(() => skillInputRef.current?.focus(), 50);
@@ -128,8 +120,7 @@ export default function VantageAI() {
             setForm({
                 role: data.role,
                 skills: data.skills,
-                years_experience: data.years_experience,
-                proficiency: data.proficiency || {}
+                years_experience: data.years_experience
             });
             setRoleInput(formatWord(data.role));
             setSkillInput(data.skills);
@@ -186,7 +177,6 @@ export default function VantageAI() {
                 ...res.data,
                 meter_config: getRiskInfo(res.data.layoff_risk)
             });
-            setRoadmapText(""); // Clear previous roadmap prediction
             setActiveTab("risk");
         } catch (err) {
             alert("Analysis failed. Backend error.");
@@ -406,65 +396,210 @@ export default function VantageAI() {
 
                                     {activeTab === "career" && (
                                         <motion.div key="career" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                                                <h4 style={styles.tabTitle}>AI-Generated Career Shift Strategy</h4>
-                                                {!roadmapText && !roadmapLoading && (
-                                                    <button
-                                                        onClick={async () => {
-                                                            setRoadmapLoading(true);
-                                                            try {
-                                                                // Provide fallback to exactly what form holds if role misses from result
-                                                                const rRole = form.role;
-                                                                const resp = await axios.post("http://127.0.0.1:8005/roadmap", {
-                                                                    role: rRole,
-                                                                    skills: form.skills,
-                                                                    years_experience: form.years_experience,
-                                                                    risk_level: result.risk_level
-                                                                });
-                                                                setRoadmapText(resp.data.roadmap);
-                                                            } catch (err) {
-                                                                alert("Failed to generate roadmap from AI agent");
-                                                            }
-                                                            setRoadmapLoading(false);
-                                                        }}
-                                                        style={{ ...styles.button, width: 'auto', margin: 0, padding: '8px 16px', fontSize: '11px', background: '#10b981' }}
-                                                    >
-                                                        <Lucide.Sparkles size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} /> Generate Personalized Roadmap
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <h4 style={styles.tabTitle}>Dynamic Career Shift Strategy</h4>
 
-                                            {roadmapLoading && (
-                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
-                                                    <Lucide.Loader2 className="animate-spin" size={32} color="#2563eb" />
-                                                    <span style={{ marginTop: '10px', fontSize: '13px', fontWeight: '500', color: '#64748b' }}>AI Agent is crafting your unique transition plan...</span>
-                                                </div>
-                                            )}
+                                            {(() => {
+                                                // 1. Get user skills array (lowercased & trimmed)
+                                                const userSkillsList = (form.skills || "").split(',').map(s => s.trim().toLowerCase()).filter(s => s);
 
-                                            {!roadmapText && !roadmapLoading && (
-                                                <div style={styles.positiveMsgCard}>
-                                                    <Lucide.Bot size={40} color="#0ea5e9" style={{ marginBottom: '10px' }} />
-                                                    <p style={{ textAlign: 'center', fontSize: '12.5px', color: '#334155' }}>
-                                                        Click the button above to let our AI agent dynamically generate a custom, week-by-week transition roadmap specifically tailored to your skills gaps and experience level.
-                                                    </p>
-                                                </div>
-                                            )}
+                                                // 2. Define High-Stability "Safe Haven" Roles
+                                                const targetRoles = [
+                                                    { id: 'MLEngineer', name: 'ML Engineer', category: 'AI/ML' },
+                                                    { id: 'CybersecurityEngineer', name: 'Cybersecurity Engineer', category: 'Security' },
+                                                    { id: 'DevOpsEngineer', name: 'DevOps Engineer', category: 'Infrastructure' },
+                                                    { id: 'Database', name: 'Data Engineer', category: 'Data' },
+                                                    { id: 'BackendDeveloper', name: 'Backend Engineer', category: 'Core Tech' }
+                                                ];
 
-                                            {roadmapText && !roadmapLoading && (
-                                                <div style={{ ...styles.shiftCard, overflowY: 'auto', maxHeight: '420px', background: '#f8fafc' }}>
-                                                    <ReactMarkdown
-                                                        components={{
-                                                            h3: ({ node, ...props }) => <h3 style={{ fontSize: '14px', color: '#1e293b', marginTop: '16px', marginBottom: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '4px' }} {...props} />,
-                                                            p: ({ node, ...props }) => <p style={{ fontSize: '12px', color: '#475569', lineHeight: '1.6', marginBottom: '10px' }} {...props} />,
-                                                            ul: ({ node, ...props }) => <ul style={{ paddingLeft: '20px', fontSize: '12px', color: '#475569', marginBottom: '10px' }} {...props} />,
-                                                            li: ({ node, ...props }) => <li style={{ marginBottom: '5px', lineHeight: '1.5' }} {...props} />,
-                                                            strong: ({ node, ...props }) => <strong style={{ color: '#0f172a', fontWeight: '700' }} {...props} />
-                                                        }}
-                                                    >
-                                                        {roadmapText}
-                                                    </ReactMarkdown>
-                                                </div>
-                                            )}
+                                                // 3. Prevent recommending their exact current role, AND Apply Comparative Risk Filtering
+                                                const currentRoleLower = form.role.replace(/[^a-zA-Z]/g, '').toLowerCase();
+                                                const availableRoles = [];
+
+                                                for (const targetRole of targetRoles) {
+                                                    // Skip their current role
+                                                    if (targetRole.id.toLowerCase() === currentRoleLower) continue;
+
+                                                    // Comparative Risk Filtering (Pillar 1)
+                                                    // Ensure a move to this role ACTUALLY lowers their risk according to the backend
+                                                    if (result.target_role_risks) {
+                                                        const simulatedRisk = result.target_role_risks[targetRole.id];
+                                                        // Only suggest if the simulated risk is strictly lower than their current risk
+                                                        if (simulatedRisk === undefined || simulatedRisk >= result.layoff_risk) {
+                                                            continue;
+                                                        }
+                                                    }
+                                                    availableRoles.push(targetRole);
+                                                }
+
+                                                // 4. Calculate matches
+                                                let suggestions = [];
+
+                                                for (const roleDef of availableRoles) {
+                                                    const requiredSkillsRaw = roleSkills[roleDef.id] || [];
+                                                    const requiredSkills = requiredSkillsRaw.map(s => s.toLowerCase());
+
+                                                    if (requiredSkills.length === 0) continue;
+
+                                                    // Find Overlap
+                                                    const matched = [];
+                                                    const missing = [];
+
+                                                    requiredSkillsRaw.forEach(rawSkill => {
+                                                        const reqSkillLow = rawSkill.toLowerCase();
+                                                        // Check if user has this skill (partial match allowed e.g. "react" in "reactjs")
+                                                        const hasSkill = userSkillsList.some(userSkill =>
+                                                            userSkill.includes(reqSkillLow) || reqSkillLow.includes(userSkill)
+                                                        );
+
+                                                        if (hasSkill) matched.push(rawSkill);
+                                                        else missing.push(rawSkill);
+                                                    });
+
+                                                    const matchPercentage = Math.round((matched.length / requiredSkills.length) * 100);
+
+                                                    suggestions.push({
+                                                        ...roleDef,
+                                                        matchPercentage,
+                                                        matched,
+                                                        missing
+                                                    });
+                                                }
+
+                                                // 5. Sort by Match Percentage DESC and take top 3
+                                                suggestions.sort((a, b) => b.matchPercentage - a.matchPercentage);
+                                                const topSuggestions = suggestions.slice(0, 3).filter(s => s.matchPercentage > 0);
+
+                                                // NEW: Categorize Experience Level
+                                                const expYears = parseFloat(form.years_experience) || 0;
+                                                let expLevel = "Junior";
+                                                if (expYears >= 3 && expYears < 7) expLevel = "Mid-Level";
+                                                else if (expYears >= 7) expLevel = "Senior";
+
+                                                // NEW: Tailored Advice Map
+                                                const expAdvice = {
+                                                    'MLEngineer': {
+                                                        'Junior': ['Master Python basics (Pandas, NumPy)', 'Complete Andrew Ng\'s ML Course', 'Build 2-3 end-to-end classification models'],
+                                                        'Mid-Level': ['Focus on deep learning frameworks (PyTorch)', 'Understand MLOps principles', 'Deploy a model to AWS SageMaker'],
+                                                        'Senior': ['Design scalable ML systems architecture', 'Lead data science initiatives', 'Align AI strategy with business outcomes']
+                                                    },
+                                                    'CybersecurityEngineer': {
+                                                        'Junior': ['Get CompTIA Security+ certified', 'Learn basic threat modeling', 'Master network fundamentals (TCP/IP)'],
+                                                        'Mid-Level': ['Focus on Penetration Testing or Cloud Security', 'Learn SIEM tools (Splunk)', 'Automate security checks (Python)'],
+                                                        'Senior': ['Define enterprise security architecture', 'Lead incident response plans', 'Ensure compliance (SOC2/ISO27001)']
+                                                    },
+                                                    'DevOpsEngineer': {
+                                                        'Junior': ['Master basic Linux administration', 'Learn Git and basic CI/CD (GitHub Actions)', 'Understand Docker fundamentals'],
+                                                        'Mid-Level': ['Become proficient in Kubernetes', 'Write Infrastructure as Code (Terraform)', 'Implement advanced observability'],
+                                                        'Senior': ['Design multi-regional cloud architectures', 'Manage platform engineering teams', 'Define enterprise-wide release strategies']
+                                                    },
+                                                    'Database': {
+                                                        'Junior': ['Master Advanced SQL querying', 'Learn data modeling basics', 'Build simple ETL pipelines'],
+                                                        'Mid-Level': ['Focus on distributed data processing (Spark)', 'Understand real-time streaming (Kafka)', 'Optimize complex database queries'],
+                                                        'Senior': ['Design enterprise data lakes/warehouses', 'Implement data governance policies', 'Evaluate emerging database technologies']
+                                                    },
+                                                    'BackendDeveloper': {
+                                                        'Junior': ['Master basic REST API design', 'Learn SQL and basic database interactions', 'Write robust unit tests'],
+                                                        'Mid-Level': ['Understand microservices vs monoliths', 'Implement caching strategies (Redis)', 'Focus on application security and rate limiting'],
+                                                        'Senior': ['Design high-availability distributed systems', 'Lead backend architectural decisions', 'Mentorship and technical leadership']
+                                                    }
+                                                };
+
+                                                if (topSuggestions.length > 0) {
+                                                    return topSuggestions.map((shift, idx) => (
+                                                        <div key={idx} style={styles.shiftCard}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                                <span style={{ fontWeight: '700', color: '#1e293b' }}>{shift.name} <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'normal' }}>({shift.category})</span></span>
+                                                                <span style={{ color: shift.matchPercentage >= 70 ? '#22c55e' : (shift.matchPercentage >= 50 ? '#f59e0b' : '#ef4444'), fontSize: '11px', fontWeight: '800' }}>
+                                                                    {shift.matchPercentage}% match
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', marginBottom: '15px' }}>
+                                                                <div style={{
+                                                                    width: `${shift.matchPercentage}%`,
+                                                                    height: '100%',
+                                                                    background: shift.matchPercentage >= 70 ? '#22c55e' : (shift.matchPercentage >= 50 ? '#f59e0b' : '#ef4444'),
+                                                                    borderRadius: '3px',
+                                                                    transition: 'width 1s ease-in-out'
+                                                                }} />
+                                                            </div>
+
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                                {/* Matched Skills */}
+                                                                <div>
+                                                                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                                                        <Lucide.CheckCircle2 size={10} color="#22c55e" style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                                                                        Skills You Already Have
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                                        {shift.matched.map((s, i) => (
+                                                                            <span key={i} style={{ background: '#dcfce7', color: '#166534', padding: '2px 6px', borderRadius: '4px', fontSize: '9.5px', fontWeight: '600' }}>{s}</span>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Missing Skills */}
+                                                                <div>
+                                                                    <div style={{ fontSize: '10px', fontWeight: '700', color: '#64748b', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                                                        <Lucide.ArrowUpRight size={10} color="#f59e0b" style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                                                                        Skills to Learn (Gap Analysis)
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                                        {shift.missing.slice(0, 8).map((s, i) => (
+                                                                            <span key={i} style={{ background: '#fffbeb', color: '#b45309', padding: '2px 6px', borderRadius: '4px', fontSize: '9.5px', fontWeight: '600', border: '1px solid #fef3c7' }}>{s}</span>
+                                                                        ))}
+                                                                        {shift.missing.length > 8 && <span style={{ fontSize: '9px', color: '#94a3b8', padding: '2px' }}>+{shift.missing.length - 8} more</span>}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* NEW: Experience-Tailored Action Plan */}
+                                                                <div style={{ marginTop: '5px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                                                                    <div style={{ fontSize: '10px', fontWeight: '800', color: '#3b82f6', marginBottom: '6px', textTransform: 'uppercase' }}>
+                                                                        🎯 Tailored Action Plan ({expLevel})
+                                                                    </div>
+                                                                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#475569', lineHeight: '1.6' }}>
+                                                                        {(expAdvice[shift.id]?.[expLevel] || []).map((tip, i) => (
+                                                                            <li key={i}>{tip}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+
+                                                                {/* NEW: Learning Resources Recommendation Section */}
+                                                                {renderMissingSkillsResources(shift.missing, expLevel, shift.name + ' roles')}
+
+                                                            </div>
+                                                        </div>
+                                                    ));
+                                                } else {
+                                                    // FALLBACK: High Demand Skills
+                                                    const expFallback = {
+                                                        'Junior': 'Focus on building strong foundational knowledge and a proven portfolio in these high-demand areas to quickly launch your career:',
+                                                        'Mid-Level': 'Your experience is valuable. Focus on strategically specializing in one of these emerging core technologies to pivot safely:',
+                                                        'Senior': 'Leverage your senior experience by understanding how these high-demand technologies shape enterprise architecture and technical strategy:'
+                                                    };
+
+                                                    const futureSkills = ['Cloud', 'Machine Learning', 'Generative AI', 'Docker', 'Cybersecurity'];
+
+                                                    return (
+                                                        <div style={{ ...styles.shiftCard, borderLeft: '4px solid #3b82f6' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                                                <Lucide.TrendingUp size={20} color="#2563eb" />
+                                                                <span style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>Future-Proof Your Profile ({expLevel})</span>
+                                                            </div>
+                                                            <p style={{ fontSize: '11px', color: '#475569', marginBottom: '15px', lineHeight: '1.5' }}>
+                                                                Your current skills don't currently match highly stable roles directly. {expFallback[expLevel]}
+                                                            </p>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                                                {futureSkills.map((skill, i) => (
+                                                                    <span key={i} style={{ background: '#eff6ff', color: '#1d4ed8', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' }}>
+                                                                        {skill}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                            {renderMissingSkillsResources(futureSkills, expLevel, 'future-proofing your profile')}
+                                                        </div>
+                                                    );
+                                                }
+                                            })()}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
