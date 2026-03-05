@@ -98,39 +98,47 @@ def predict(data: RiskInput):
         raw_role = data.role.strip()
         no_space_role = raw_role.replace(" ", "").lower()
         
-        # 2. MARKET-DRIVEN ROLE BOUNDARIES (Automation Risks)
+        # 2. MARKET-DRIVEN ROLE BOUNDARIES (Automation Risks) - UPDATED FOR ACCURACY
         role_rules = {
             'Cybersecurity Analyst': {
-                'min': 5, 'max': 25, 'ai': 0.10, 'demand': 0.98, 
-                'market_reason': 'High demand for human intuition in security; low automation risk.'
+                'min': 5, 'max': 22, 'ai_impact': 0.15, 'demand': 0.98, 
+                'market_reason': 'Extremely high demand due to rising cyber threats; AI is a co-pilot, not a replacement.'
             },
             'ML Engineer': {
-                'min': 5, 'max': 30, 'ai': 0.15, 'demand': 0.95,
-                'market_reason': 'Core AI role; highly resistant to automation as they build the automation.'
+                'min': 8, 'max': 28, 'ai_impact': 0.10, 'demand': 0.96,
+                'market_reason': 'They build the future; demand is booming while supply is low.'
             },
-            'Cloud Engineer': {
-                'min': 10, 'max': 35, 'ai': 0.25, 'demand': 0.90,
-                'market_reason': 'Essential infrastructure, though basic tasks are being automated.'
+            'Data Engineer': {
+                'min': 10, 'max': 32, 'ai_impact': 0.20, 'demand': 0.94,
+                'market_reason': 'Data infrastructure is the foundation for all AI; critical roles.'
             },
             'DevOps Engineer': {
-                'min': 10, 'max': 40, 'ai': 0.30, 'demand': 0.88,
-                'market_reason': 'Critical for delivery pipeline; high complexity reduces automation risk.'
+                'min': 12, 'max': 38, 'ai_impact': 0.25, 'demand': 0.92,
+                'market_reason': 'Complexity of infrastructure-as-code protects these roles.'
             },
-            'Full Stack Developer': {
-                'min': 25, 'max': 60, 'ai': 0.50, 'demand': 0.80,
-                'market_reason': 'Versatility helps, but routine coding is increasingly automated.'
+            'Cloud Architect': {
+                'min': 10, 'max': 30, 'ai_impact': 0.15, 'demand': 0.95,
+                'market_reason': 'Strategic high-level design remains a human-centric skill.'
             },
             'Backend Developer': {
-                'min': 35, 'max': 70, 'ai': 0.60, 'demand': 0.70,
-                'market_reason': 'Logic generation via AI is high, but architectural depth is still human-led.'
+                'min': 20, 'max': 55, 'ai_impact': 0.45, 'demand': 0.85,
+                'market_reason': 'Logic is being automated, but complex system architecture is safe.'
             },
-            'Data Analyst': {
-                'min': 45, 'max': 80, 'ai': 0.75, 'demand': 0.65,
-                'market_reason': 'High risk as GenAI excels at data cleaning and visualization.'
+            'Full Stack Developer': {
+                'min': 25, 'max': 65, 'ai_impact': 0.55, 'demand': 0.82,
+                'market_reason': 'Versatility is a buffer, but routine CRUD tasks are highly automatable.'
             },
             'Frontend Developer': {
-                'min': 50, 'max': 85, 'ai': 0.85, 'demand': 0.60,
-                'market_reason': 'Very high risk; AI can generate UI from design or descriptions.'
+                'min': 35, 'max': 75, 'ai_impact': 0.75, 'demand': 0.70,
+                'market_reason': 'High risk; GenAI can translate wireframes to code with 90% accuracy.'
+            },
+            'QA Engineer': {
+                'min': 45, 'max': 85, 'ai_impact': 0.85, 'demand': 0.50,
+                'market_reason': 'Automation testing is increasingly handleable by AI agents.'
+            },
+            'System Architect': {
+                'min': 5, 'max': 25, 'ai_impact': 0.10, 'demand': 0.90,
+                'market_reason': 'High-level decision making and trade-off analysis is hard for AI.'
             }
         }
 
@@ -138,13 +146,15 @@ def predict(data: RiskInput):
         normalized_role = raw_role
         rule = None
         for key, r in role_rules.items():
-            if key.replace(" ", "").lower() == no_space_role:
+            # More precise matching
+            target_key = key.replace(" ", "").lower()
+            if target_key == no_space_role or target_key in no_space_role or no_space_role in target_key:
                 rule = r
                 normalized_role = key
                 break
         
         if not rule:
-            rule = {'min': 30, 'max': 70, 'ai': 0.5, 'demand': 0.6, 'market_reason': 'General market competition.'}
+            rule = {'min': 30, 'max': 70, 'ai_impact': 0.5, 'demand': 0.65, 'market_reason': 'General market competition.'}
 
         # 3. SKILL PROCESSING
         user_skills_raw = [s.strip() for s in data.skills.split(',') if s.strip()]
@@ -162,15 +172,15 @@ def predict(data: RiskInput):
         
         avg_proficiency_weight = total_p_weight / len(user_skills_raw) if user_skills_raw else 1.2
         
-        # 4. DOMAIN MAPPING (Relevance & Diversity)
+        # 4. DOMAIN MAPPING (Role-Skill Validation Dataset)
         domain_mapping = {
-            "Frontend": ["react", "vue", "angular", "javascript", "typescript", "html", "css", "tailwind", "nextjs"],
-            "Backend": ["nodejs", "python", "java", "go", "rust", "django", "fastapi", "spring"],
-            "Database": ["sql", "postgresql", "mongodb", "redis", "mysql", "cassandra"],
-            "Cloud": ["aws", "azure", "google cloud", "cloud", "terraform"],
-            "DevOps": ["docker", "kubernetes", "jenkins", "ci/cd", "ansible"],
-            "AI/ML": ["machine learning", "ai", "generative ai", "tensorflow", "pytorch", "nlp", "llm"],
-            "Cybersecurity": ["cybersecurity", "security", "penetration testing", "ethical hacking"]
+            "Frontend": ["react", "angular", "vue", "javascript", "typescript", "html", "css", "next.js", "tailwind", "sass", "webpack", "vite"],
+            "Backend": ["node.js", "express", "django", "flask", "spring boot", "fastapi", "java", "python", "go", "rust", "laravel", "php", "ruby", "rails"],
+            "Data Scientist": ["python", "pandas", "numpy", "machine learning", "tensorflow", "pytorch", "statistics", "scikit-learn", "data science"],
+            "Cybersecurity": ["cybersecurity", "security", "penetration testing", "ethical hacking", "siem", "cryptography", "firewall", "zero trust"],
+            "DevOps": ["docker", "kubernetes", "jenkins", "ci/cd", "ansible", "terraform", "prometheus", "grafana", "git"],
+            "ML Engineer": ["machine learning", "ai", "generative ai", "tensorflow", "pytorch", "nlp", "llm", "keras", "scikit", "pandas", "numpy"],
+            "Cloud": ["aws", "azure", "google cloud", "cloud", "lambda", "s3", "ec2", "serverless"]
         }
 
         domains_detected = set()
@@ -199,7 +209,15 @@ def predict(data: RiskInput):
             if any(is_sk in s_lower for is_sk in outcome_impact_skills):
                 impact_detected.append(skill)
 
-        # 5. ANALYSIS LOGIC
+        # 5. ROLE-SKILL VALIDATION RULE
+        # Risk calculation should only proceed if at least one skill matches the role's domain
+        if relevant_skills_count == 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"The entered skills do not match the selected role: {data.role}. Please enter skills relevant to the selected role in order to calculate layoff risk."
+            )
+
+        # 6. ANALYSIS LOGIC
         strengths = []
         risk_factors = []
         
@@ -214,11 +232,14 @@ def predict(data: RiskInput):
             adj += 15
             risk_factors.append("Low Skill Maturity: Most skills are at a beginner level.")
 
-        # Skill Relevance
+        # Skill Relevance (HEAVILY WEIGHTED)
         relevance_ratio = relevant_skills_count / len(user_skills_raw) if user_skills_raw else 0
-        if relevance_ratio < 0.3:
-            adj += 12
-            risk_factors.append("Role Mismatch: Many listed skills are not directly relevant to the current role.")
+        if relevance_ratio < 0.2:
+            adj += 35
+            risk_factors.append("Critical Role Mismatch: Your skills do not align with your designation, creating high redundancy risk.")
+        elif relevance_ratio < 0.4:
+            adj += 20
+            risk_factors.append("Moderate Role Mismatch: Many listed skills are not directly relevant to the current role's core requirements.")
 
         # Skill Diversity (Trending, Cross-Domain, Impact)
         diversity_score = 0
@@ -236,10 +257,26 @@ def predict(data: RiskInput):
             adj -= 10
             strengths.append(f"Impactful Skills: Knowledge of {', '.join(impact_detected[:2])} drives business value.")
 
-        # 6. FINAL SCORE
-        base_risk = (rule['min'] + rule['max']) / 2
-        final_score = max(rule['min'], min(base_risk + adj, rule['max']))
-        risk_level = "Low Risk" if final_score <= 35 else "Medium Risk" if final_score <= 65 else "High Risk"
+        # 6. FINAL SCORE - SOPHISTICATED ALGORITHM
+        # Weighted average of base risk, AI impact, and skill buffers
+        unadjusted_risk = (rule['min'] + rule['max']) / 2
+        
+        # Skill Buffer (how much the user's specific skills offset the role's general risk)
+        skill_buffer = 0
+        if avg_proficiency_weight < 0.7:  # Expert
+             skill_buffer -= 20
+        elif avg_proficiency_weight < 0.9: # Advanced
+             skill_buffer -= 10
+        elif avg_proficiency_weight > 1.1: # Beginner
+             skill_buffer += 10
+             
+        # Demand Buffer
+        demand_buffer = (1 - rule['demand']) * 20  # Lower demand = higher risk
+        
+        final_score = unadjusted_risk + adj + skill_buffer + demand_buffer
+        final_score = max(5, min(98, final_score)) # Clamp between 5% and 98%
+        
+        risk_level = "Low Risk" if final_score <= 30 else "Medium Risk" if final_score <= 60 else "High Risk"
 
         # 7. ALTERNATE ROLES
         suggested_roles = []
@@ -261,16 +298,15 @@ def predict(data: RiskInput):
             "risk_level": risk_level,
             "career_strengths": strengths,
             "key_risk_factors": risk_factors,
+            "explanations": strengths + risk_factors,
             "skill_diversity_summary": f"Detected expertise in {', '.join(domains_detected)}. Diversity index is {'High' if diversity_score > 20 else 'Moderate'}.",
             "recommended_skills": ["Generative AI", "Cloud Architecture", "Cybersecurity"] if "AI/ML" not in domains_detected else ["Kubernetes", "DevSecOps"],
             "suggested_alternate_roles": list(set(suggested_roles))
         }
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-    except Exception as e:
-        # Provide a clear error message in English to the Frontend
         print(f"Server Error: {str(e)}")
         raise HTTPException(
             status_code=500, 
@@ -283,35 +319,36 @@ async def generate_roadmap(data: RoadmapRequest):
         raise HTTPException(status_code=500, detail="Gemini API Key missing")
         
     prompt = f"""
-    You are an expert Career Agent helping tech professionals pivot safely.
-    Role: {data.role}
-    Experience: {data.years_experience} years
-    Skills: {data.skills}
-    Current Layoff Risk Level: {data.risk_level}
+    You are an ELITE Career AI Agent focusing on MARKET STABILITY and UPSKILLING.
+    User Profile:
+    - Current Role: {data.role}
+    - Years of Experience: {data.years_experience}
+    - Current Specific Skills: {data.skills}
+    - ASSESSED LAYOFF RISK: {data.risk_level}
     
-    Provide a highly personalized, practical, and dynamic career shift roadmap mapped to their specific skills and experience level to reduce layoff risk. 
-    Format your response in Markdown with the following structured sections:
+    TASK: Generate a high-impact, custom 4-5 point Action Plan to insulate this user from market volatility in their CURRENT role. 
+    Focus on "Niche Specialization" and "High-Impact Technologies" (like Cloud, AI integration, Large Scale Infrastructure).
     
-    ### 🎯 Target Roles
-    Suggest 2-3 specific job roles that are highly stable and match their current skills closely. Explain why each fits.
-    
-    ### 🚀 Skills to Acquire
-    Identify 3-5 specific gaps between their current skills and the target roles. Tell them exactly what to learn.
-    
-    ### 📚 Recommended Resources
-    Provide 3 actionable resources to learn these skills (certifications, popular courses, specific documentation).
-    
-    ### 📈 3-Month Action Plan
-    A short week-by-week or month-by-month actionable plan to start transitioning.
+    CRITICAL RULES:
+    1. Focus on deep competency in CURRENT role first.
+    2. Identify specific certifications or real-world projects they should build.
+    3. Be extremely practical and action-oriented.
+    4. Return ONLY a raw JSON array of strings. No markdown, no "json" label.
+    Example: ["Obtain AWS Certified Solutions Architect Associate", "Implement a RAG-based AI feature in your current team", "Master K8s operator patterns"]
     """
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash-8b') # use flash for speed
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(prompt)
-        return {"roadmap": response.text}
+        import json
+        text = response.text.strip('` \n')
+        if text.startswith('json'):
+            text = text[4:].strip()
+        plan = json.loads(text)
+        return {"action_plan": plan}
     except Exception as e:
         print(f"Agent Error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to run the AI Agent")
+        return {"action_plan": ["Focus on building strong foundational knowledge", "Expand your domain expertise", "Stay updated with emerging trends in your field"]}
 
 @app.post("/chat")
 async def chat_agent(data: ChatRequest):
@@ -321,7 +358,7 @@ async def chat_agent(data: ChatRequest):
     system_prompt = f"You are a helpful, encouraging career advisor. The user is a {data.role} with skills: {data.skills}. Their current layoff risk is {data.risk_level}. They need very conversational and short advice (max 2-3 sentences). Answer this question: {data.message}"
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash-8b')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(system_prompt)
         return {"reply": response.text}
     except Exception as e:

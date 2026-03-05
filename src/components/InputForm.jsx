@@ -12,6 +12,11 @@ export default function VantageAI() {
     const [result, setResult] = useState(null);
     const [activeTab, setActiveTab] = useState("risk");
     const [uploading, setUploading] = useState(false);
+    const [validationError, setValidationError] = useState(null);
+
+    // Dynamic Roadmap States
+    const [aiActionPlan, setAiActionPlan] = useState([]);
+    const [loadingPlan, setLoadingPlan] = useState(false);
 
     // Chatbot States
     const [chatOpen, setChatOpen] = useState(false);
@@ -138,8 +143,8 @@ export default function VantageAI() {
         if (!result) {
             setChatHistory(prev => [
                 ...prev,
-                { role: 'user', text: chatMessage },
-                { role: 'bot', text: "Please use the 'Predict Risk' button on the left first so I understand your career profile!" }
+                { role: 'bot', text: "Please use the 'Predict Risk' button on the left first so I understand your career profile!" },
+                { role: 'user', text: chatMessage }
             ]);
             setChatMessage("");
             return;
@@ -153,7 +158,7 @@ export default function VantageAI() {
             const resp = await axios.post('http://127.0.0.1:8005/chat', {
                 message: chatMessage,
                 risk_level: result.risk_level,
-                role: result.role,
+                role: form.role,
                 skills: form.skills
             });
             setChatHistory(prev => [...prev, { role: 'bot', text: resp.data.reply }]);
@@ -166,10 +171,14 @@ export default function VantageAI() {
         e.preventDefault();
         if (!form.role) return alert("Please select a role from suggestions.");
         setLoading(true);
+        setLoadingPlan(true);
+        setAiActionPlan([]);
+        setValidationError(null);
+
         try {
             const cleanedForm = {
                 ...form,
-                role: form.role.replace(/\s+/g, ''),
+                role: form.role,
                 years_experience: parseFloat(form.years_experience) || 0
             };
             const res = await axios.post("http://127.0.0.1:8005/predict", cleanedForm);
@@ -178,8 +187,31 @@ export default function VantageAI() {
                 meter_config: getRiskInfo(res.data.layoff_risk)
             });
             setActiveTab("risk");
+
+            // Asynchronously fetch the action plan
+            try {
+                const roadmapRes = await axios.post("http://127.0.0.1:8005/roadmap", {
+                    role: cleanedForm.role,
+                    skills: cleanedForm.skills,
+                    years_experience: cleanedForm.years_experience,
+                    risk_level: getRiskInfo(res.data.layoff_risk).label
+                });
+                setAiActionPlan(roadmapRes.data.action_plan || []);
+            } catch (roadErr) {
+                console.error("Roadmap Agent Error:", roadErr);
+            } finally {
+                setLoadingPlan(false);
+            }
+
         } catch (err) {
-            alert("Analysis failed. Backend error.");
+            const errorMsg = err.response?.data?.detail || "Analysis failed. Backend error.";
+            if (err.response?.status === 400) {
+                setValidationError(errorMsg);
+                setResult(null);
+            } else {
+                alert(errorMsg);
+            }
+            setLoadingPlan(false);
         }
         setLoading(false);
     };
@@ -286,6 +318,13 @@ export default function VantageAI() {
                             </div>
                         )}
 
+                        {loading && (
+                            <div style={styles.loaderOverlay}>
+                                <Lucide.Loader2 size={40} color="#3b82f6" className="animate-spin" />
+                                <p style={{ marginTop: '10px', color: '#1e293b', fontWeight: 'bold' }}>Calculating AI Risk Model...</p>
+                            </div>
+                        )}
+
                         <div style={styles.inputGroup}>
                             <label style={styles.label}><Lucide.Briefcase size={14} /> DESIGNATION</label>
                             <input style={styles.input} value={roleInput} onChange={handleRoleChange} onKeyDown={(e) => handleKeyDown(e, roleSuggestions, activeRoleIdx, setActiveRoleIdx, selectRole)} placeholder="Search Role..." />
@@ -349,10 +388,51 @@ export default function VantageAI() {
                     </form>
                 </div>
 
-                {/* RIGHT: TABS CARD */}
-                <AnimatePresence>
-                    {result && (
+                {/* RIGHT: TABS CARD or VALIDATION ERROR */}
+                <AnimatePresence mode="wait">
+                    {validationError ? (
                         <motion.div
+                            key="validation-error"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            style={{
+                                ...styles.card,
+                                width: "500px",
+                                minHeight: "550px",
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: '40px',
+                                gap: '20px',
+                                textAlign: 'center',
+                                background: 'linear-gradient(135deg, #fff1f2 0%, #ffffff 100%)',
+                                border: '2px dashed #fda4af'
+                            }}
+                        >
+                            <div style={{ background: '#ffe4e6', padding: '20px', borderRadius: '50%' }}>
+                                <Lucide.AlertCircle size={60} color="#e11d48" />
+                            </div>
+                            <h3 style={{ margin: 0, color: '#9f1239', fontSize: '22px', fontWeight: '800' }}>Skills Mismatch</h3>
+                            <p style={{ margin: 0, color: '#be123c', fontSize: '15px', lineHeight: '1.6', maxWidth: '350px' }}>
+                                {validationError}
+                            </p>
+
+                            <div style={{ marginTop: '20px', padding: '15px', background: '#fff', borderRadius: '12px', border: '1px solid #fee2e2', width: '100%', textAlign: 'left' }}>
+                                <h4 style={{ fontSize: '13px', color: '#e11d48', marginTop: 0, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Lucide.Info size={14} /> Tips for accurate analysis:
+                                </h4>
+                                <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: '#475569', lineHeight: '1.8' }}>
+                                    <li>Check for typos in your role or skills.</li>
+                                    <li>Ensure at least one skill directly supports your designation.</li>
+                                    <li>Example: <b>Frontend</b> needs skills like <b>React</b> or <b>JavaScript</b>.</li>
+                                </ul>
+                            </div>
+                        </motion.div>
+                    ) : result && (
+                        <motion.div
+                            key="result-card"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 20 }}
@@ -396,40 +476,23 @@ export default function VantageAI() {
 
                                     {activeTab === "career" && (
                                         <motion.div key="career" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                            <h4 style={styles.tabTitle}>Dynamic Career Shift Strategy</h4>
+                                            <h4 style={styles.tabTitle}>Dynamic Career Roadmap & Optimization</h4>
 
                                             {(() => {
                                                 // 1. Get user skills array (lowercased & trimmed)
                                                 const userSkillsList = (form.skills || "").split(',').map(s => s.trim().toLowerCase()).filter(s => s);
 
-                                                // 2. Define High-Stability "Safe Haven" Roles
-                                                const targetRoles = [
-                                                    { id: 'MLEngineer', name: 'ML Engineer', category: 'AI/ML' },
-                                                    { id: 'CybersecurityEngineer', name: 'Cybersecurity Engineer', category: 'Security' },
-                                                    { id: 'DevOpsEngineer', name: 'DevOps Engineer', category: 'Infrastructure' },
-                                                    { id: 'Database', name: 'Data Engineer', category: 'Data' },
-                                                    { id: 'BackendDeveloper', name: 'Backend Engineer', category: 'Core Tech' }
-                                                ];
+                                                // 2. We ONLY want to suggest optimizing their current role! No pivoting anymore.
+                                                const currentRoleCleaned = form.role.replace(/[^a-zA-Z]/g, '');
 
-                                                // 3. Prevent recommending their exact current role, AND Apply Comparative Risk Filtering
-                                                const currentRoleLower = form.role.replace(/[^a-zA-Z]/g, '').toLowerCase();
-                                                const availableRoles = [];
+                                                // Try to match their role with our known dictionary, otherwise default to Full Stack for gap analysis rules
+                                                const userRoleKey = Object.keys(roleSkills).find(r => r.toLowerCase() === currentRoleCleaned.toLowerCase()) || "FullStackDeveloper";
 
-                                                for (const targetRole of targetRoles) {
-                                                    // Skip their current role
-                                                    if (targetRole.id.toLowerCase() === currentRoleLower) continue;
-
-                                                    // Comparative Risk Filtering (Pillar 1)
-                                                    // Ensure a move to this role ACTUALLY lowers their risk according to the backend
-                                                    if (result.target_role_risks) {
-                                                        const simulatedRisk = result.target_role_risks[targetRole.id];
-                                                        // Only suggest if the simulated risk is strictly lower than their current risk
-                                                        if (simulatedRisk === undefined || simulatedRisk >= result.layoff_risk) {
-                                                            continue;
-                                                        }
-                                                    }
-                                                    availableRoles.push(targetRole);
-                                                }
+                                                const availableRoles = [{
+                                                    id: userRoleKey,
+                                                    name: form.role || "Your Role",
+                                                    category: 'Current Role Optimization'
+                                                }];
 
                                                 // 4. Calculate matches
                                                 let suggestions = [];
@@ -465,9 +528,8 @@ export default function VantageAI() {
                                                     });
                                                 }
 
-                                                // 5. Sort by Match Percentage DESC and take top 3
-                                                suggestions.sort((a, b) => b.matchPercentage - a.matchPercentage);
-                                                const topSuggestions = suggestions.slice(0, 3).filter(s => s.matchPercentage > 0);
+                                                // 5. Take just the top suggestion (which is their exact role now)
+                                                const topSuggestions = suggestions.slice(0, 1);
 
                                                 // NEW: Categorize Experience Level
                                                 const expYears = parseFloat(form.years_experience) || 0;
@@ -551,16 +613,37 @@ export default function VantageAI() {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* NEW: Experience-Tailored Action Plan */}
+                                                                {/* NEW: Experience-Tailored Action Plan (Dynamic from AI Agent) */}
                                                                 <div style={{ marginTop: '5px', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                                                                    <div style={{ fontSize: '10px', fontWeight: '800', color: '#3b82f6', marginBottom: '6px', textTransform: 'uppercase' }}>
-                                                                        🎯 Tailored Action Plan ({expLevel})
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                                        <div style={{ fontSize: '10px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase' }}>
+                                                                            🎯 Tailored AI Action Plan ({expLevel})
+                                                                        </div>
+                                                                        {loadingPlan && <Lucide.Loader2 className="animate-spin" size={12} color="#3b82f6" />}
                                                                     </div>
-                                                                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#475569', lineHeight: '1.6' }}>
-                                                                        {(expAdvice[shift.id]?.[expLevel] || []).map((tip, i) => (
-                                                                            <li key={i}>{tip}</li>
-                                                                        ))}
-                                                                    </ul>
+
+                                                                    {loadingPlan ? (
+                                                                        <div style={{ fontSize: '11px', color: '#64748b', fontStyle: 'italic', padding: '10px', background: '#eff6ff', borderRadius: '8px' }}>
+                                                                            Agent is generating your customized learning plan...
+                                                                        </div>
+                                                                    ) : (
+                                                                        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '11.5px', color: '#475569', lineHeight: '1.6' }}>
+                                                                            {aiActionPlan.length > 0 ? (
+                                                                                aiActionPlan.map((tip, i) => (
+                                                                                    <li key={i}>{tip}</li>
+                                                                                ))
+                                                                            ) : (
+                                                                                /* Fallback to static advice if AI fails */
+                                                                                (expAdvice[shift.id]?.[expLevel] || [
+                                                                                    "Focus on building strong foundational knowledge",
+                                                                                    "Expand your domain expertise to adjacent technologies",
+                                                                                    "Build side projects demonstrating enterprise architecture"
+                                                                                ]).map((tip, i) => (
+                                                                                    <li key={i}>{tip}</li>
+                                                                                ))
+                                                                            )}
+                                                                        </ul>
+                                                                    )}
                                                                 </div>
 
                                                                 {/* NEW: Learning Resources Recommendation Section */}
