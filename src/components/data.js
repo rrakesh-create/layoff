@@ -324,11 +324,12 @@ export const learningResources = {
         why: "The #1 lingua franca for Machine Learning, Data Engineering, and Backend Automation.",
         levels: {
             "Junior": [
-                { title: "Python for Beginners (Programming with Mosh)", url: "https://www.youtube.com/watch?v=kqtD5dpn9C8" },
-                { title: "Automate the Boring Stuff (Free Book)", url: "https://automatetheboringstuff.com/" }
+                { title: "Python Official Documentation Tutorial", url: "https://docs.python.org/3/tutorial/index.html" },
+                { title: "Python for Everybody (Coursera)", url: "https://www.coursera.org/specializations/python" },
+                { title: "Interactive Python Course (Codecademy)", url: "https://www.codecademy.com/learn/learn-python-3" }
             ],
             "Mid-Level": [
-                { title: "Real Python Advanced Tutorials", url: "https://realpython.com/" },
+                { title: "Real Python Advanced Guides", url: "https://realpython.com/" },
                 { title: "Clean Code in Python", url: "https://github.com/zedr/clean-code-python" }
             ],
             "Senior": [
@@ -341,8 +342,9 @@ export const learningResources = {
         why: "Essential for containerization, ensuring software runs exactly the same everywhere.",
         levels: {
             "Junior": [
-                { title: "Docker Crash Course (Traversy Media)", url: "https://www.youtube.com/watch?v=3c-iZaI7nLE" },
-                { title: "Official Docker 101 Tutorial", url: "https://docs.docker.com/get-started/" }
+                { title: "Official Docker 101 Tutorial", url: "https://docs.docker.com/get-started/" },
+                { title: "Docker for the Absolute Beginner (Udemy)", url: "https://www.udemy.com/course/learn-docker/" },
+                { title: "Interactive Docker Play-with-Docker", url: "https://labs.play-with-docker.com/" }
             ],
             "Mid-Level": [
                 { title: "Docker Best Practices for Node/Python apps", url: "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/" },
@@ -358,8 +360,8 @@ export const learningResources = {
         why: "The industry standard for managing containerized applications at massive global scale.",
         levels: {
             "Junior": [
-                { title: "Kubernetes in 100 Seconds", url: "https://www.youtube.com/watch?v=VnvRFRk_51k" },
-                { title: "Kubernetes Basics (Interactive Tutorial)", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/" }
+                { title: "Kubernetes Basics (Interactive Tutorial)", url: "https://kubernetes.io/docs/tutorials/kubernetes-basics/" },
+                { title: "Introduction to Kubernetes (edX - Linux Foundation)", url: "https://www.edx.org/course/introduction-to-kubernetes" }
             ],
             "Mid-Level": [
                 { title: "Cloud Native DevOps with Kubernetes", url: "https://www.oreilly.com/library/view/cloud-native-devops/9781492040705/" },
@@ -376,10 +378,11 @@ export const learningResources = {
         levels: {
             "Junior": [
                 { title: "React Official Quick Start", url: "https://react.dev/learn" },
+                { title: "Meta Front-End Developer Professional Certificate (Coursera)", url: "https://www.coursera.org/professional-certificates/meta-front-end-developer" },
                 { title: "Scrimba Interactive React Course", url: "https://scrimba.com/learn/learnreact" }
             ],
             "Mid-Level": [
-                { title: "Advanced React Patterns (Kent C. Dodds)", url: "https://epicreact.dev/" },
+                { title: "Advanced React Patterns (Epic React)", url: "https://epicreact.dev/" },
                 { title: "React Server Components Deep Dive", url: "https://nextjs.org/docs" }
             ],
             "Senior": [
@@ -392,8 +395,8 @@ export const learningResources = {
         why: "The largest cloud provider; cloud computing is a mandatory skill for infrastructure security.",
         levels: {
             "Junior": [
-                { title: "AWS Certified Cloud Practitioner Bootcamp", url: "https://aws.amazon.com/training/digital/" },
-                { title: "AWS in 10 Minutes (Fireship)", url: "https://www.youtube.com/watch?v=JIbIYCM48to" }
+                { title: "AWS Skill Builder (Official Free Training)", url: "https://explore.skillbuilder.aws/learn" },
+                { title: "AWS Certified Cloud Practitioner (Udemy)", url: "https://www.udemy.com/course/aws-certified-cloud-practitioner-new/" }
             ],
             "Mid-Level": [
                 { title: "AWS Certified Solutions Architect Associate", url: "https://cantrill.io/" },
@@ -409,8 +412,9 @@ export const learningResources = {
         why: "Extremely popular for scalable real-time APIs using JavaScript outside the browser.",
         levels: {
             "Junior": [
-                { title: "Node.js documentation for beginners", url: "https://nodejs.org/en/learn" },
-                { title: "Build a REST API with Node (Fireship)", url: "https://www.youtube.com/watch?v=ENrzD9HAZK4" }
+                { title: "Official Node.js Introduction", url: "https://nodejs.org/en/learn/getting-started/introduction-to-nodejs" },
+                { title: "Server-side Development with NodeJS (Coursera)", url: "https://www.coursera.org/learn/server-side-nodejs" },
+                { title: "Build a REST API with Node (FreeCodeCamp)", url: "https://www.freecodecamp.org/news/build-a-restful-api-using-node-express-and-mongodb/" }
             ],
             "Mid-Level": [
                 { title: "Node.js Design Patterns", url: "https://www.nodejsdesignpatterns.com/" },
@@ -426,8 +430,9 @@ export const learningResources = {
         why: "The leading NoSQL document database, common in agile Full Stack environments.",
         levels: {
             "Junior": [
-                { title: "MongoDB University Basics (Free)", url: "https://learn.mongodb.com/" },
-                { title: "MERN Stack Tutorial", url: "https://www.youtube.com/watch?v=O3BUHvfpr94" }
+                { title: "MongoDB University Basics (Official)", url: "https://learn.mongodb.com/" },
+                { title: "MongoDB Manual & Getting Started", url: "https://www.mongodb.com/docs/manual/" },
+                { title: "Build a Full Stack MERN App (Tutorial)", url: "https://www.freecodecamp.org/news/learn-the-mern-stack/" }
             ],
             "Mid-Level": [
                 { title: "Advanced Aggregation Pipelines", url: "https://www.mongodb.com/docs/manual/core/aggregation-pipeline/" },
@@ -443,8 +448,9 @@ export const learningResources = {
         why: "Driving almost all modern software innovations, making applications truly intelligent.",
         levels: {
             "Junior": [
-                { title: "Machine Learning for Everybody (FreeCodeCamp)", url: "https://www.youtube.com/watch?v=i_LwzRmA_08" },
-                { title: "Kaggle Intro to Machine Learning", url: "https://www.kaggle.com/learn/intro-to-machine-learning" }
+                { title: "Machine Learning Crash Course (Google)", url: "https://developers.google.com/machine-learning/crash-course" },
+                { title: "Kaggle Intro to Machine Learning", url: "https://www.kaggle.com/learn/intro-to-machine-learning" },
+                { title: "Machine Learning Specialization (Coursera)", url: "https://www.coursera.org/specializations/machine-learning-introduction" }
             ],
             "Mid-Level": [
                 { title: "DeepLearning.AI Specialization (Coursera)", url: "https://www.coursera.org/specializations/deep-learning" },
@@ -456,13 +462,13 @@ export const learningResources = {
             ]
         }
     },
-    // Adding more key skills for other roles
     "typescript": {
         why: "Provides type safety to JavaScript, significantly reducing runtime errors in large-scale apps.",
         levels: {
             "Junior": [
-                { title: "TypeScript Course for Beginners", url: "https://www.youtube.com/watch?v=BwuLxPH8IDs" },
-                { title: "Official TS Handbook", url: "https://www.typescriptlang.org/docs/handbook/intro.html" }
+                { title: "Official TS Handbook", url: "https://www.typescriptlang.org/docs/handbook/intro.html" },
+                { title: "TypeScript Fundamentals (Pluralsight)", url: "https://www.pluralsight.com/courses/typescript-fundamentals" },
+                { title: "Learn TypeScript (Codecademy)", url: "https://www.codecademy.com/learn/learn-typescript" }
             ],
             "Mid-Level": [
                 { title: "Advanced TypeScript Types (Frontend Masters)", url: "https://frontendmasters.com/courses/advanced-typescript/" },
@@ -478,11 +484,11 @@ export const learningResources = {
         why: "The React framework for production, essential for SEO and performant web apps.",
         levels: {
             "Junior": [
-                { title: "Next.js App Router Crash Course", url: "https://www.youtube.com/watch?v=ZVnjOPwW4ZA" },
-                { title: "Learn Next.js (Official)", url: "https://nextjs.org/learn" }
+                { title: "Learn Next.js (Official Full Course)", url: "https://nextjs.org/learn" },
+                { title: "Next.js 14 Full Stack Development (Udemy)", url: "https://www.udemy.com/course/nextjs-react/" }
             ],
             "Mid-Level": [
-                { title: "Mastering Next.js 14 (Codevolution)", url: "https://www.udemy.com/" },
+                { title: "Mastering Next.js (Frontend Masters)", url: "https://frontendmasters.com/courses/next-js/" },
                 { title: "Server Actions and DB Mutations", url: "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations" }
             ],
             "Senior": [
@@ -495,8 +501,9 @@ export const learningResources = {
         why: "The most advanced open-source relational database, preferred for full-stack applications.",
         levels: {
             "Junior": [
-                { title: "PostgreSQL Tutorial for Beginners", url: "https://www.youtube.com/watch?v=qw--VYLpxG4" },
-                { title: "PostgreSQL Exercises", url: "https://pgexercises.com/" }
+                { title: "Official PostgreSQL Tutorial", url: "https://www.postgresql.org/docs/current/tutorial.html" },
+                { title: "PostgreSQL Exercises (Interactive)", url: "https://pgexercises.com/" },
+                { title: "Intro to Databases (Meta - Coursera)", url: "https://www.coursera.org/learn/introduction-to-databases" }
             ],
             "Mid-Level": [
                 { title: "Advanced SQL Queries", url: "https://www.postgresqltutorial.com/" },
@@ -512,7 +519,8 @@ export const learningResources = {
         why: "Automates software delivery, reducing human error and deployment times.",
         levels: {
             "Junior": [
-                { title: "GitHub Actions Crash Course", url: "https://www.youtube.com/watch?v=R8_veQiYBjI" },
+                { title: "GitHub Actions Documentation", url: "https://docs.github.com/en/actions" },
+                { title: "Continuous Delivery & DevOps (Coursera)", url: "https://www.coursera.org/learn/uva-darden-continous-delivery-devops" },
                 { title: "GitLab CI/CD Basics", url: "https://docs.gitlab.com/ee/ci/" }
             ],
             "Mid-Level": [
@@ -529,8 +537,8 @@ export const learningResources = {
         why: "The OS that runs the cloud and most backend infrastructure.",
         levels: {
             "Junior": [
-                { title: "Linux Command Line for Beginners", url: "https://linuxjourney.com/" },
-                { title: "Ubuntu Server Crash Course", url: "https://www.youtube.com/watch?v=v_1qaXPsJA8" }
+                { title: "Linux Journey (Interactive Learning)", url: "https://linuxjourney.com/" },
+                { title: "Introduction to Linux (edX)", url: "https://www.edx.org/course/introduction-to-linux" }
             ],
             "Mid-Level": [
                 { title: "Bash Scripting Masterclass", url: "https://www.udemy.com/course/bash-scripting/" },
@@ -546,8 +554,8 @@ export const learningResources = {
         why: "High performance language ideal for distributed systems and cloud-native tools.",
         levels: {
             "Junior": [
-                { title: "Go Tutorial (FreeCodeCamp)", url: "https://www.youtube.com/watch?v=YS4e4q9oBaU" },
-                { title: "A Tour of Go", url: "https://go.dev/tour/welcome/1" }
+                { title: "A Tour of Go (Official Interactive)", url: "https://go.dev/tour/welcome/1" },
+                { title: "Go Programming (Coursera / UCI)", url: "https://www.coursera.org/specializations/google-golang" }
             ],
             "Mid-Level": [
                 { title: "Go Concurrency Patterns", url: "https://go.dev/blog/pipelines" },
@@ -563,8 +571,9 @@ export const learningResources = {
         why: "The bedrock of enterprise backend systems globally.",
         levels: {
             "Junior": [
-                { title: "Java Programming Basics", url: "https://www.codecademy.com/learn/learn-java" },
-                { title: "Java OOP Concepts", url: "https://www.youtube.com/watch?v=eIrMbAQSU34" }
+                { title: "Java Programming Basics (Udacity)", url: "https://www.udacity.com/course/java-programming-basics--ud282" },
+                { title: "Official Java Documentation (Oracle)", url: "https://docs.oracle.com/en/java/" },
+                { title: "Learn Java (Codecademy)", url: "https://www.codecademy.com/learn/learn-java" }
             ],
             "Mid-Level": [
                 { title: "Spring Boot Masterclass", url: "https://spring.academy/courses" },
@@ -580,8 +589,8 @@ export const learningResources = {
         why: "A robust, opinionated framework preferred by large enterprises.",
         levels: {
             "Junior": [
-                { title: "Angular Crash Course", url: "https://www.youtube.com/watch?v=3qBXWUpoPHo" },
-                { title: "Angular Official Tutorial", url: "https://angular.dev/tutorials/learn-angular" }
+                { title: "Angular Official Tutorial (Tour of Heroes)", url: "https://angular.dev/tutorials/tour-of-heroes" },
+                { title: "Angular for Front End Engineers (Coursera)", url: "https://www.coursera.org/learn/angular-front-end-engineers" }
             ],
             "Mid-Level": [
                 { title: "RxJS in Angular", url: "https://rxjs.dev/guide/overview" },
@@ -593,12 +602,12 @@ export const learningResources = {
             ]
         }
     },
-    "cloud": { // General cloud concepts if AWS/Azure specific isn't matched
+    "cloud": {
         why: "Essential knowledge for deploying scaling and managing modern applications.",
         levels: {
             "Junior": [
-                { title: "Cloud Computing Basics", url: "https://www.youtube.com/watch?v=RWgW-CgdIk0" },
-                { title: "Intro to Cloud Architecture", url: "https://www.ibm.com/cloud/learn/cloud-computing" }
+                { title: "Intro to Cloud Architecture (IBM)", url: "https://www.ibm.com/cloud/learn/cloud-computing" },
+                { title: "Microsoft Azure Fundamentals", url: "https://learn.microsoft.com/en-us/credentials/certifications/azure-fundamentals/" }
             ],
             "Mid-Level": [
                 { title: "Infrastructure as Code (Terraform)", url: "https://learn.hashicorp.com/terraform" },

@@ -514,19 +514,21 @@ export default function VantageAI() {
                                                                                 // Create Fallback Generic Resource
                                                                                 if (!resourceData) {
                                                                                     resourceData = {
-                                                                                        why: `Essential skill for ${shift.name} roles.`,
+                                                                                        why: `Essential foundational skill needed for ${shift.name} roles.`,
                                                                                         levels: {
                                                                                             "Junior": [
-                                                                                                { title: `${missingSkill} Crash Course (YouTube)`, url: `https://www.youtube.com/results?search_query=${encodeURIComponent(missingSkill)}+crash+course` },
-                                                                                                { title: `Learn ${missingSkill} on freeCodeCamp`, url: `https://www.freecodecamp.org/news/search/?query=${encodeURIComponent(missingSkill)}` }
+                                                                                                { title: `Official ${missingSkill} Documentation`, url: `https://www.google.com/search?q=${encodeURIComponent(missingSkill)}+official+documentation` },
+                                                                                                { title: `${missingSkill} Basics on freeCodeCamp`, url: `https://www.freecodecamp.org/news/search/?query=${encodeURIComponent(missingSkill)}` },
+                                                                                                { title: `Introductory ${missingSkill} Course (Coursera)`, url: `https://www.coursera.org/search?query=${encodeURIComponent(missingSkill)}&productDifficultyLevel=Beginner` }
                                                                                             ],
                                                                                             "Mid-Level": [
-                                                                                                { title: `Advanced ${missingSkill} Concepts`, url: `https://www.youtube.com/results?search_query=advanced+${encodeURIComponent(missingSkill)}` },
-                                                                                                { title: `${missingSkill} Courses on Coursera`, url: `https://www.coursera.org/search?query=${encodeURIComponent(missingSkill)}` }
+                                                                                                { title: `${missingSkill} Developer Guide`, url: `https://www.google.com/search?q=${encodeURIComponent(missingSkill)}+developer+guide+best+practices` },
+                                                                                                { title: `Advanced ${missingSkill} Courses (edX)`, url: `https://www.edx.org/search?q=${encodeURIComponent(missingSkill)}` },
+                                                                                                { title: `Build a Project with ${missingSkill} (Tutorial)`, url: `https://www.youtube.com/results?search_query=build+project+with+${encodeURIComponent(missingSkill)}` }
                                                                                             ],
                                                                                             "Senior": [
-                                                                                                { title: `${missingSkill} System Architecture & Best Practices`, url: `https://www.youtube.com/results?search_query=${encodeURIComponent(missingSkill)}+architecture+best+practices` },
-                                                                                                { title: `Official ${missingSkill} Documentation`, url: `https://www.google.com/search?q=${encodeURIComponent(missingSkill)}+official+documentation` }
+                                                                                                { title: `${missingSkill} Enterprise Architecture Patterns`, url: `https://www.google.com/search?q=${encodeURIComponent(missingSkill)}+system+architecture+patterns` },
+                                                                                                { title: `Expert Level ${missingSkill} Training (Udemy)`, url: `https://www.udemy.com/courses/search/?src=ukw&q=${encodeURIComponent(missingSkill)}&lang=en&sort=highest-rated` }
                                                                                             ]
                                                                                         }
                                                                                     };
